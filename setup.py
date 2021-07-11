@@ -7,15 +7,15 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='pys3sync',
-    version='0.1.2',
-    author="Angad Singh",
-    author_email="angad@angadsingh.in",
+    name='pys3sync-sachin',
+    version='0.1.1',
+    author="Sachin Rajput",
+    author_email="er.sachinrajput1991@gmail.com",
     description="Continuously Sync local files to/from S3",
     long_description=long_description,
     long_description_content_type='text/markdown',
     license="MIT",
-    url="https://github.com/angadsingh/s3sync",
+    url="https://github.com/srajput1991/s3sync",
     py_modules=['s3sync'],
     install_requires=[
         'click',

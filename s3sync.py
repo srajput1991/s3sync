@@ -20,7 +20,7 @@ click_log.basic_config(logger)
 
 AWS_CLI_MIN_SUPPORTED_VERSION = "2.0.9"
 AWS_S3SYNC_PROFILE = "s3sync"
-AWS_S3_SYNC_COMMAND = "aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps {leftPath} {rightPath}"
+AWS_S3_SYNC_COMMAND = "aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps {leftPath} {rightPath} --endpoint-url {url}"
 NUM_TOKENS_PER_PUSH = 10.0 #since rate cannot be < 1 in limiter
 
 def _run_long_command(command):
@@ -36,9 +36,9 @@ def _run_long_command(command):
 
 
 @time_calls
-def _do_sync(ctx, leftPath, rightPath, include_patterns=None, exclude_patterns=None):
+def _do_sync(ctx, leftPath, rightPath,url, include_patterns=None, exclude_patterns=None):
     logger.info("Performing aws s3 sync from [{}] to [{}]".format(leftPath, rightPath))
-    cmd = AWS_S3_SYNC_COMMAND.format(leftPath=leftPath, rightPath=rightPath)
+    cmd = AWS_S3_SYNC_COMMAND.format(leftPath=leftPath, rightPath=rightPath,url=url)
     if include_patterns != None:
         for pattern in include_patterns:
             cmd = " ".join((cmd, "--include \"{}\"".format(pattern)))
@@ -58,11 +58,12 @@ def _do_sync(ctx, leftPath, rightPath, include_patterns=None, exclude_patterns=N
 
 
 class FSWatchHandler(watchdog.events.PatternMatchingEventHandler):
-    def __init__(self, ctx, localpath, s3path):
+    def __init__(self, ctx, localpath, s3path,url):
         self.ctx = ctx
         self.config = ctx.obj['CONFIG']
         self.localpath = localpath
         self.s3path = s3path
+        self.url    = url
 
         self.include_patterns = self.config['watcher']['include_patterns']
         self.exclude_patterns = self.config['watcher']['exclude_patterns']
@@ -72,7 +73,7 @@ class FSWatchHandler(watchdog.events.PatternMatchingEventHandler):
         watchdog.events.PatternMatchingEventHandler.__init__(self, patterns=self.include_patterns, ignore_patterns=self.exclude_patterns,
                                                              ignore_directories=exclude_directories, case_sensitive=case_sensitive)
 
-        self.syncop = partial(_do_sync, ctx, self.localpath, self.s3path, include_patterns=self.include_patterns, exclude_patterns=self.exclude_patterns)
+        self.syncop = partial(_do_sync, ctx, self.localpath, self.s3path,self.url, include_patterns=self.include_patterns, exclude_patterns=self.exclude_patterns)
 
         storage = token_bucket.MemoryStorage()
         per_second_rate = (float(self.config['global']['max_syncs_per_minute'])/60.0)*NUM_TOKENS_PER_PUSH
@@ -181,6 +182,7 @@ def _init_aws_cli_profile(ctx):
 def base_sync_params(func):
     @click.option('--s3path', required=True, type=click.Path(), help='Full s3 path to sync to/from, e.g. s3://bucket/path')
     @click.option('--localpath', required=True, type=click.Path(), help='Local directory path which you want to sync')
+    @click.option('--url', required=True, type=click.Path(), help='Endpoint url')
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -208,10 +210,10 @@ def init(ctx):
 @s3sync.command()
 @base_sync_params
 @click.pass_context
-def push(ctx, s3path, localpath):
+def push(ctx, s3path, localpath,url):
     """One-way continuous sync from localpath to s3 path (uses a file watcher called watchdog)"""
     logger.info("Starting continuous one-way sync from local path[{}] to s3 path[{}]".format(localpath, s3path))
-    event_handler = FSWatchHandler(ctx, localpath, s3path)
+    event_handler = FSWatchHandler(ctx, localpath, s3path,url)
     observer = watchdog.observers.Observer()
     observer.schedule(event_handler, path=localpath, recursive=True)
     observer.start()
