@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="bbfe29ad-35a6-426e-95a9-a80e031f8270" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/s3sync.py" beforeDir="false" afterPath="$PROJECT_DIR$/s3sync.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
     </list>
@@ -40,5 +41,11 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="-1212" y="240" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1626082379987">
+      <screen x="-1920" y="-106" width="1920" height="1080" />
+    </state>
+    <state x="-1212" y="240" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1440.900/-1920.-106.1920.1080@-1920.-106.1920.1080" timestamp="1626082379987" />
   </component>
 </project>

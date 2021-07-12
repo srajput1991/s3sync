@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
 AWS_CLI_MIN_SUPPORTED_VERSION = "2.0.9"
-AWS_S3SYNC_PROFILE = "ss3sync"
-AWS_S3_SYNC_COMMAND = "aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps {leftPath} {rightPath} --endpoint-url {url}"
+AWS_S3SYNC_PROFILE = "s3sync"
+AWS_S3_SYNC_COMMAND = "aws s3 sync --delete --exact-timestamps {leftPath} {rightPath} --endpoint-url {url}"
 NUM_TOKENS_PER_PUSH = 10.0 #since rate cannot be < 1 in limiter
 
 def _run_long_command(command):
@@ -39,6 +39,7 @@ def _run_long_command(command):
 def _do_sync(ctx, leftPath, rightPath,url, include_patterns=None, exclude_patterns=None):
     logger.info("Performing aws s3 sync from [{}] to [{}]".format(leftPath, rightPath))
     cmd = AWS_S3_SYNC_COMMAND.format(leftPath=leftPath, rightPath=rightPath,url=url)
+    logger.info("AWS sync cmd>>> {}".format(cmd))
     if include_patterns != None:
         for pattern in include_patterns:
             cmd = " ".join((cmd, "--include \"{}\"".format(pattern)))
@@ -192,14 +193,14 @@ def base_sync_params(func):
 @click.option('--config', required=True, type=click.Path(), help='Path to the config.yaml file containing configuration params for this utility')
 @click.pass_context
 @click_log.simple_verbosity_option(logger)
-def ss3sync(ctx, config):
+def s3sync(ctx, config):
     """A utility created to sync files to/from S3 as a continuously running
     process, without having to manually take care of managing the sync. 
     It internally uses the aws s3 sync command to do the sync and uses
     python's watchdog listener to get notified of any changes to the watched folder."""
     ctx.obj['CONFIG'] = _read_config_yaml(ctx, config)
 
-@ss3sync.command()
+@s3sync.command()
 @click.pass_context
 def init(ctx):
     """Initial setup. Run this for the first-time"""
@@ -207,7 +208,7 @@ def init(ctx):
     _init_aws_cli_profile(ctx)
     logger.info("Init successful")
 
-@ss3sync.command()
+@s3sync.command()
 @base_sync_params
 @click.pass_context
 def push(ctx, s3path, localpath,url):
@@ -224,19 +225,19 @@ def push(ctx, s3path, localpath,url):
         observer.stop()
     observer.join()
 
-@ss3sync.command()
+@s3sync.command()
 @base_sync_params
 @click.option('--interval', required=True, type=click.INT, help='S3 polling interval in seconds')
 @click.pass_context
-def pull(ctx, s3path, localpath, interval):
+def pull(ctx, s3path, localpath, interval,url):
     """One-way continuous sync from s3 path to local path (based on polling on an interval)"""
     logger.info("Starting continuous one-way sync from s3 path[{}] to local path[{}]".format(s3path, localpath))
     while True:
-        _do_sync(ctx, s3path, localpath)
+        _do_sync(ctx, s3path, localpath,url)
         time.sleep(interval)
 
 def cli():
-    ss3sync(obj={})
+    s3sync(obj={})
 
 if __name__ == '__main__':
-    ss3sync(obj={})
+    s3sync(obj={})

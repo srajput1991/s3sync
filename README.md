@@ -78,6 +78,7 @@ Options:
   --s3path PATH     Full s3 path to sync to/from  [required]
   --localpath PATH  Local directory path which you want to sync  [required]
   --help            Show this message and exit.
+  --url             Endpoint url
 ```
 
 `s3sync --config config.yaml push --help`
@@ -93,6 +94,7 @@ Options:
   --localpath PATH    Local directory path which you want to sync  [required]
   --interval INTEGER  S3 polling interval in seconds  [required]
   --help              Show this message and exit.
+  --url             Endpoint url
 ```
 
 ##### First run/setup
