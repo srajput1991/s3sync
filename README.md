@@ -107,19 +107,11 @@ This utility creates a [named profile](https://docs.aws.amazon.com/cli/latest/us
 
 You run one instance of this utility per localpath<>s3path combination that you want to continuously sync
 
-`s3sync --config config.yaml -v DEBUG push --s3path s3://<bucket>/<path> --localpath ./` 
-
-![push](docs/push.png)
+`s3sync --config config.yaml -v DEBUG push --s3path s3://<bucket>/<path> --localpath ./ --url https://[endpoint-url]` 
 
 ##### Pull
 
-`s3sync --config config.yaml -v DEBUG pull --s3path s3://<bucket>/<path> --localpath ./sync --interval 2`
-
-![pull](docs/pull.png)
-
-##### Rate limiting in action
-
-![ratelimit](docs/ratelimit.png)
+`s3sync --config config.yaml -v DEBUG pull --s3path s3://<bucket>/<path> --localpath ./sync --interval 2 --url https://[endpoint-url]`
 
 ### Configuration
 
@@ -175,119 +167,3 @@ Passed through to your `~/.aws/config` via `aws configure set default.s3.max_ban
 Passed through to your `~/.aws/config` via `aws configure set default.s3.use_accelerate_endpoint` command. Read about the parameter [here](https://docs.aws.amazon.com/cli/latest/topic/s3-config.html#use-accelerate-endpoint)
 
 ------
-
-### Performance Tests for aws sync command
-
-#### Environment
-
-> Network: home/BLR (Airtel 1 Gbps Xtreme Fiber)  
-> WiFi: 5 GHZ, RSS: -38 dbM, Tx rate: 1300 Mbps (802.11 ac)  
-> Upload speed to s3: 18 MB/s  
-> Download speed from s3: 15 MB/s  
-> Number of threads for s3 sync command: 10 (default)
-
-#### Sync from local to S3 (upload)
-
-##### Test artifact 1: https://github.com/apache/storm
-
-Size: 224M  
-Number of files: 3571
-
-###### Test 1 (full sync):
-
-```bash
-time aws s3 sync --storage-class REDUCED_REDUNDANCY ./ s3://psm-poc-dmp-temp/codesync
-real	0m45.543s
-user	0m14.755s
-sys	0m3.685s
-```
-
-###### Test 2 (added 39 files, 168k):
-
-```bash
-cp -rf ../intSDK .
-time aws s3 sync --storage-class REDUCED_REDUNDANCY ./  s3://psm-poc-dmp-temp/codesync
-
-real	0m3.141s
-user	0m1.887s
-sys	0m0.405s
-```
-
-###### Test 3 (removed 398 files, 2.1M):
-
-```bash
-rm -rf examples/
-time aws s3 sync --storage-class REDUCED_REDUNDANCY --delete ./  s3://psm-poc-dmp-temp/codesync
-
-real	0m3.436s
-user	0m2.276s
-sys	0m0.406s
-```
-
-###### Test 4 (change timestamp of single file):
-
-```bash
-touch README.markdown 
-time aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps ./  s3://psm-poc-dmp-temp/codesync
-
-real	0m2.602s
-user	0m1.492s
-sys	0m0.296s
-```
-
-###### Test 5 (no change):
-
-```bash
-time aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps ./  s3://psm-poc-dmp-temp/codesync
-
-real	0m2.442s
-user	0m1.469s
-sys	0m0.294s
-```
-
-##### Test artifact 2: Bunch of PNGs
-
-Size: 400M  
-Number of files: 577
-
-###### Test 1 (full sync)
-
-```bash
-time aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps ./  s3://psm-poc-dmp-temp/codesync
-
-real	0m22.015s
-user	0m5.972s
-sys	0m2.516s
-```
-
-#### Sync from S3 to local (download)
-
-##### Test artifact 1: https://github.com/apache/storm
-
-Size: 224M  
-Number of files: 3571
-
-###### Test 1 (full sync)
-
-```bash
-time aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps s3://psm-poc-dmp-temp/codesync ./
-
-real	0m26.448s
-user	0m14.544s
-sys	0m3.794s
-```
-
-##### Test artifact 2: Bunch of PNGs
-
-Size: 400M  
-Number of files: 577
-
-###### Test 1 (full sync)
-
-```bash
-time aws s3 sync --storage-class REDUCED_REDUNDANCY --delete --exact-timestamps s3://psm-poc-dmp-temp/codesync ./
-
-real	0m29.268s
-user	0m6.131s
-sys	0m2.855s
-```

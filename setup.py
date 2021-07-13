@@ -7,8 +7,8 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='pys3sync-sachin',
-    version='0.1.3',
+    name='pys3nfssync',
+    version='0.0.1',
     author="Sachin Rajput",
     author_email="er.sachinrajput1991@gmail.com",
     description="Continuously Sync local files to/from S3",
